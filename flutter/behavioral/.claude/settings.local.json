@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(fvm flutter create:*)",
+      "Bash(fvm releases:*)",
+      "Bash(fvm use:*)",
+      "Bash(fvm flutter:*)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "Bash(mkdir:*)",
+      "Bash(curl:*)",
+      "mcp__dart__analyze_files",
+      "Bash(open:*)",
+      "Bash(xcrun simctl list:*)",
+      "mcp__dart__run_tests"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
