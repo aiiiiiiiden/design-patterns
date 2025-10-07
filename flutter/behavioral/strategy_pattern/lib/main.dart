@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'context/data_converter.dart';
+import 'models/user.dart';
+import 'strategies/csv_serializer.dart';
+import 'strategies/json_serializer.dart';
+import 'strategies/xml_serializer.dart';
+import 'strategies/data_serializer_strategy.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,116 +14,330 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Strategy Pattern - Data Format Converter',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const DataConverterPage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class DataConverterPage extends StatefulWidget {
+  const DataConverterPage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<DataConverterPage> createState() => _DataConverterPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _DataConverterPageState extends State<DataConverterPage> {
+  final DataConverter _converter = DataConverter();
+  final List<User> _sampleUsers = [
+    const User(
+      id: '1',
+      name: 'Alice Johnson',
+      email: 'alice@example.com',
+      age: 28,
+      role: 'Developer',
+    ),
+    const User(
+      id: '2',
+      name: 'Bob Smith',
+      email: 'bob@example.com',
+      age: 35,
+      role: 'Designer',
+    ),
+    const User(
+      id: '3',
+      name: 'Charlie Brown',
+      email: 'charlie@example.com',
+      age: 42,
+      role: 'Manager',
+    ),
+  ];
 
-  void _incrementCounter() {
+  String _output = '';
+  String _selectedFormat = 'JSON';
+
+  @override
+  void initState() {
+    super.initState();
+    _converter.setStrategy(JsonSerializer());
+  }
+
+  void _convertData() {
+    try {
+      final serialized = _converter.serialize(_sampleUsers);
+      setState(() {
+        _output = serialized;
+      });
+    } catch (e) {
+      _showError('Serialization Error: $e');
+    }
+  }
+
+  void _changeFormat(String format) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _selectedFormat = format;
+      switch (format) {
+        case 'JSON':
+          _converter.setStrategy(JsonSerializer());
+          break;
+        case 'CSV':
+          _converter.setStrategy(CsvSerializer());
+          break;
+        case 'XML':
+          _converter.setStrategy(XmlSerializer());
+          break;
+      }
+      _output = '';
     });
+  }
+
+  void _copyToClipboard() {
+    if (_output.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: _output));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Copied to clipboard!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
+        title: const Text('Strategy Pattern - Data Converter'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Title
+            const Text(
+              'Data Format Converter',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Demonstrates Strategy Pattern with runtime format selection',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+
+            // Sample Data Display
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Sample Users:',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._sampleUsers.map((user) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                child: Text(user.name[0]),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      user.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${user.email} • ${user.role} • Age: ${user.age}',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Format Selection
+            const Text(
+              'Select Output Format:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(
+                  value: 'JSON',
+                  label: Text('JSON'),
+                  icon: Icon(Icons.code),
+                ),
+                ButtonSegment(
+                  value: 'CSV',
+                  label: Text('CSV'),
+                  icon: Icon(Icons.table_chart),
+                ),
+                ButtonSegment(
+                  value: 'XML',
+                  label: Text('XML'),
+                  icon: Icon(Icons.description),
+                ),
+              ],
+              selected: {_selectedFormat},
+              onSelectionChanged: (Set<String> selected) {
+                _changeFormat(selected.first);
+              },
+            ),
+            const SizedBox(height: 24),
+
+            // Convert Button
+            ElevatedButton.icon(
+              onPressed: _convertData,
+              icon: const Icon(Icons.transform),
+              label: Text('Convert to $_selectedFormat'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Output Display
+            if (_output.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Output ($_selectedFormat):',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy),
+                    onPressed: _copyToClipboard,
+                    tooltip: 'Copy to clipboard',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: SelectableText(
+                  _output,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 32),
+
+            // Strategy Pattern Explanation
+            Card(
+              color: Colors.blue[50],
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.lightbulb, color: Colors.blue),
+                        SizedBox(width: 8),
+                        Text(
+                          'Strategy Pattern',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'This app demonstrates the Strategy pattern by:',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildBulletPoint('Defining a common interface (DataSerializerStrategy)'),
+                    _buildBulletPoint('Implementing multiple strategies (JSON, CSV, XML)'),
+                    _buildBulletPoint('Allowing runtime strategy selection'),
+                    _buildBulletPoint('Encapsulating each algorithm separately'),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Current Strategy: ${_converter.getFormatName() ?? "None"}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    Text(
+                      'MIME Type: ${_converter.getMimeType() ?? "N/A"}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+
+  Widget _buildBulletPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, bottom: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('• ', style: TextStyle(fontSize: 16)),
+          Expanded(child: Text(text)),
+        ],
+      ),
     );
   }
 }
