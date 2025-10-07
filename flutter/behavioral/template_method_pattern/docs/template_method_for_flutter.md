@@ -104,7 +104,7 @@ test('should reject null email', () {
   expect(result.errorMessage, 'Email is required');
 });
 ```
-
+---
 ### 5.2. EmailValidator 테스트 케이스 : 형식 검증
 
 @ 기호, 도메인, TLD 필수
@@ -279,7 +279,7 @@ class EmailValidator extends BaseValidator {
   static const int minLength = 5; // a@b.c
   static const int maxLength = 254; // RFC 5321
   EmailValidator({String fieldName = 'Email'}) : super(fieldName);
-
+  
   @override
   bool checkMinLength(String value) => value.length >= minLength;
   @override
@@ -289,9 +289,7 @@ class EmailValidator extends BaseValidator {
   @override
   String getMaxLengthErrorMessage() => '$fieldName must not exceed $maxLength characters';
   @override
-  bool checkFormat(String value) {
-    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value);
-  }
+  bool checkFormat(String value) => RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value);
   @override
   String getFormatErrorMessage() => '$fieldName must be a valid email address';
   @override
