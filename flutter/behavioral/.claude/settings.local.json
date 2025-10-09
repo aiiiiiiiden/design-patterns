@@ -11,7 +11,10 @@
       "mcp__dart__analyze_files",
       "Bash(open:*)",
       "Bash(xcrun simctl list:*)",
-      "mcp__dart__run_tests"
+      "mcp__dart__run_tests",
+      "Bash(xcrun simctl boot:*)",
+      "Bash(nc:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
