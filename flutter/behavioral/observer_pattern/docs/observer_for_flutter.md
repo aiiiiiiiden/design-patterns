@@ -527,5 +527,12 @@ class _ObserverPatternDemo2State extends State<ObserverPatternDemo2> {
 
 ---
 
+## 12. 토론하기
+- observer pattern은 정말로 객체 간의 결합도를 낮춰줄까?
+- 플러터는 왜 subject-observer 구조의 전통적인 observer pattern을 적용하지 않았을까?
+- 계층 구조를 형성하는 위젯트리에서 효과적인 이벤트 시스템은 어떤게 있을까?
+
+---
+
 # 감사합니다.
 aiiiiiiiden@gmail.com
